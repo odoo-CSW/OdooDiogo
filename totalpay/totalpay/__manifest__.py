@@ -17,7 +17,7 @@
         
         Requisitos do Sistema:
         ----------------------
-        ⚠️ **Linux On-Premise**: Requer Nginx configurado.
+        ⚠️ *Linux On-Premise*: Requer Nginx configurado.
         
         ℹ️ Não necessário em: Odoo.sh ou Windows On-Premise
         
