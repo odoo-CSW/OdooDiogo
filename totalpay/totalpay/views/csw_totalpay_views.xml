@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+    <!-- ROOT MENU  -->
+    <menuitem id="menu_csw_root" 
+              name="Total Pay" 
+              sequence="10"
+              web_icon="totalpay,static/img/icon.png"/>
+
+    <!-- ACTION -->
+    
+    <!-- Action: Pagamentos -->
+    <record id="action_x_csw_totalpay" model="ir.actions.act_window">
+        <field name="name">Lista de Pagamentos</field>
+        <field name="res_model">x_csw_totalpay</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nenhum pagamento encontrado
+            </p>
+            <p>
+                Os pagamentos são criados automaticamente pela integração Total Pay.
+            </p>
+        </field>
+    </record>
+
+        <!-- Action: Estados Pagamento -->
+    <record id="action_x_csw_totalpay_stage" model="ir.actions.act_window">
+        <field name="name">Estados Pagamento</field>
+        <field name="res_model">x_csw_totalpay_stage</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Estados de Pagamento
+            </p>
+            <p>
+                Os estados são criados automaticamente na instalação do módulo.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action: Configurações -->
+    <record id="action_x_csw_totalpay_config" model="ir.actions.act_window">
+        <field name="name">Configurações Modulo</field>
+        <field name="res_model">x_csw_totalpay_config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure o Total Pay
+            </p>
+            <p>
+                Crie a configuração da empresa e credenciais de integraçãoo.
+            </p>
+        </field>
+    </record>
+
+    <!-- MENUS -->
+    <menuitem id="menu_csw_payments"
+              name="Lista de Pagamentos"
+              parent="menu_csw_root"
+              action="action_x_csw_totalpay"
+              sequence="10"/>
+
+
+
+    <!-- VIEWS: PAGAMENTOS -->
+    
+    <!-- Form View: Pagamentos -->
+    <record id="view_x_csw_totalpay_form" model="ir.ui.view">
+        <field name="name">x_csw_totalpay.form</field>
+        <field name="model">x_csw_totalpay</field>
+        <field name="arch" type="xml">
+            <form string="Detalhes do Pagamento" create="false" edit="false" delete="false">
+                <header>
+                        <button name="action_send_multibanco_email" 
+                            type="object" 
+                            string="📧 Enviar Email MULTIBANCO" 
+                            class="btn-primary"
+                            invisible="x_studio_metodo_pagamento != 'MULTIBANCO' or not x_studio_mb_entidade or not x_studio_mb_referencia or x_studio_stage_id == 6 or x_studio_stage_id == 3"
+                            help="Enviar/Reenviar instruções MULTIBANCO por email"/>
+                        <button name="action_simulate_payment_approval" 
+                            type="object" 
+                            string="🎯 Simular Aprovação" 
+                            class="btn-success"
+                            invisible="x_studio_stage_id != 5 or x_studio_stage_id == 3"
+                            confirm="Deseja simular a aprovação deste pagamento? Isto irá executar todo o processo de aprovação e reconciliação automática."
+                            help="Simula a aprovação do pagamento para testar a reconciliação automática"/>
+                    <field name="x_studio_stage_id" widget="statusbar" 
+                           options="{'clickable': '0'}"
+                           statusbar_colors="{'Aprovado':'green','Pendente':'blue','Em Processamento':'orange','Falhou':'red','Cancelado':'gray'}"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_payment" type="object" 
+                                class="oe_stat_button" icon="fa-money"
+                                invisible="account_payment_id == False">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Ver</span>
+                                <span class="o_stat_text">Pagamento</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="x_name" readonly="1" class="oe_inline"/>
+                        </h1>
+                        <h3>
+                            <field name="x_studio_value" widget="monetary" readonly="1" class="oe_inline"/>
+                            <field name="x_studio_currency_id" invisible="1"/>
+                        </h3>
+                    </div>
+                    
+
+                    <group>
+                        <group string="Informação do Pagamento">
+                            <field name="x_studio_metodo_pagamento" readonly="1"/>
+                            <field name="x_studio_value" widget="monetary" readonly="1"/>
+                            <field name="x_studio_currency_id" invisible="1"/>
+                            <field name="x_studio_date_hour_payment" readonly="1"/>
+                            <field name="x_studio_date_hour_payment_approved" readonly="1"/>
+                            <field name="x_studio_operador" readonly="1"/>
+                        </group>
+
+                        <group string="Dados do Pagador">
+                            <field name="x_studio_partner_id" readonly="1" string="Cliente"/>
+                            <field name="x_studio_partner_email" readonly="1" string="E-mail" invisible="x_studio_metodo_pagamento != 'paypal'"/>
+                            <field name="x_studio_partner_phone" readonly="1" string="Telefone" invisible="x_studio_metodo_pagamento != 'MBWAY'"/>
+                        </group>
+                    </group>
+
+                    <group string="Transação" invisible="x_studio_metodo_pagamento not in ['paypal', 'MBWAY']">
+                        <group invisible="x_studio_metodo_pagamento != 'paypal'">
+                            <field name="x_studio_payment_url" readonly="1" widget="url" placeholder="Sem informação"/>
+                            <field name="x_studio_paypal_transaction_id" readonly="1" placeholder="Sem informação"/>
+                            <field name="x_studio_paypal_capture_id" readonly="1" placeholder="Sem informação"/>
+                        </group>
+
+                        <group invisible="x_studio_metodo_pagamento != 'MBWAY'">
+                            <field name="x_studio_payment_url" readonly="1" widget="url" placeholder="Sem informação"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Integração">
+                            <field name="x_studio_organization_id" readonly="1" placeholder="Sem informação"/>
+                            <field name="x_studio_api_version" readonly="1" placeholder="Sem informação"/>
+                            <field name="x_studio_key_api" password="True" readonly="1" placeholder="Sem informação"/>
+                            <field name="x_studio_state_integrator" readonly="1" placeholder="Sem informação"/>
+                        </group>
+                        <group/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View: Pagamentos -->
+    <record id="view_x_csw_totalpay_list" model="ir.ui.view">
+        <field name="name">x_csw_totalpay.list</field>
+        <field name="model">x_csw_totalpay</field>
+        <field name="arch" type="xml">
+                <list string="Lista de Pagamentos" create="false" edit="false" delete="false">
+                <header>
+                    <button name="%(totalpay.action_server_retry_failed_payments)d" type="action"
+                        string="Repetir Pagamento" class="btn-primary"/>
+                </header>
+                <field name="x_name"/>
+                <field name="x_studio_partner_id"/>
+                <field name="x_studio_value"/>
+                <field name="x_studio_currency_id"/>
+                <field name="x_studio_metodo_pagamento"/>
+                <field name="x_studio_partner_email" string="E-mail" optional="show" placeholder="Sem informação"/>
+                <field name="x_studio_partner_phone" string="Telefone" optional="show" placeholder="Sem informação"/>
+                <field name="x_studio_date_hour_payment"/>
+                <field name="x_studio_stage_id" widget="badge" 
+                       decoration-success="x_studio_stage_id == 1"
+                       decoration-warning="x_studio_stage_id == 5"
+                       decoration-danger="x_studio_stage_id == 6"
+                       decoration-info="x_studio_stage_id == 2"/>
+                <field name="x_studio_payment_url" string="URL Pagamento" optional="show" widget="url"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View: Pagamentos -->
+    <record id="view_x_csw_totalpay_search" model="ir.ui.view">
+        <field name="name">x_csw_totalpay.search</field>
+        <field name="model">x_csw_totalpay</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="x_name" string="Número Pagamento"/>
+                <field name="x_studio_partner_id" string="Contacto"/>
+                <field name="x_studio_metodo_pagamento" string="Método Pagamento"/>
+                <field name="x_studio_stage_id" string="Estado"/>
+                <field name="x_studio_state_integrator" string="Estado Integrador"/>
+                <field name="x_studio_api_version" string="Versão API"/>
+                <filter name="filter_today" string="Hoje" context="{'filter_today': True}"/>
+                <filter name="group_stage" string="Estado" context="{'group_by': 'x_studio_stage_id'}"/>
+                <filter name="group_partner" string="Contacto" context="{'group_by': 'x_studio_partner_id'}"/>
+                <filter name="group_payment_method" string="Método Pagamento" context="{'group_by': 'x_studio_metodo_pagamento'}"/>
+                <filter name="group_date" string="Data" context="{'group_by': 'create_date:day'}"/>
+            </search>
+        </field>
+    </record>
+
+    </data>
+</odoo>

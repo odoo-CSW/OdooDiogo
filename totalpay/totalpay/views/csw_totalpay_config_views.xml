@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+    <!-- MENU -->
+
+    <menuitem id="menu_csw_config"
+              name="Configurações Modulo"
+              parent="menu_csw_root"
+              action="action_x_csw_totalpay_config"
+              groups="totalpay.group_admin"
+              sequence="30"/>
+
+
+    <!-- VIEWS: CONFIGURAÇÕES -->
+
+    <!-- List View: Configurações -->
+    <record id="view_x_csw_totalpay_config_list" model="ir.ui.view">
+        <field name="name">x_csw_totalpay_config.list</field>
+        <field name="model">x_csw_totalpay_config</field>
+        <field name="arch" type="xml">
+                <list string="Configurações" create="true" edit="false" delete="false">
+                <field name="x_studio_name"/>
+                <field name="x_studio_nif_empresa"/>
+                <field name="x_studio_e_mail"/>
+                <field name="x_studio_status_check" string="Estado Integrador" widget="badge"
+                       decoration-success="x_studio_status_check == 'active'"
+                       decoration-warning="x_studio_status_check == 'suspended'"
+                       decoration-danger="x_studio_status_check == 'canceled'"
+                       decoration-muted="x_studio_status_check == 'semValor'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View: Configurações -->
+    <record id="view_x_csw_totalpay_config_form" model="ir.ui.view">
+        <field name="name">x_csw_totalpay_config.form</field>
+        <field name="model">x_csw_totalpay_config</field>
+        <field name="arch" type="xml">
+            <form string="Configuração Total Pay">
+                <header>
+                    <button name="action_test_odoo_webhook" type="object" 
+                            string="Sincronizar Licença" class="btn-primary"
+                            help="Testa a ligação com o integrador, verifica licença e atualiza métodos disponíveis"/>
+                    <field name="x_studio_status_check" widget="statusbar" 
+                           statusbar_visible="semValor,active,suspended,canceled"
+                           statusbar_colors="{'active':'success','suspended':'warning','canceled':'danger','semValor':'muted'}"/>
+                </header>
+                <sheet>
+                    <group>
+                           <group string="Dados da Empresa">
+                                <label for="x_studio_name" string="Empresa"/>
+                                <div>
+                                    <field name="x_studio_name" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_name" style="font-style: italic;">Sem dados</span>
+                                </div>
+
+                                <field name="x_studio_nome_empresa_abreviado" 
+                                   placeholder="Sem dados"/>
+                                <label for="x_studio_nif_empresa" string="NIF"/>
+                                <div>
+                                    <field name="x_studio_nif_empresa" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_nif_empresa" style="font-style: italic;">Sem dados</span>
+                                </div>
+                               <label for="x_studio_morada" string="Morada"/>
+                                <div>
+                                    <field name="x_studio_morada" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_morada" style="font-style: italic;">Sem dados</span>
+                                </div>
+                                <label for="x_studio_codigo_postal" string="Código Postal"/>
+                                <div>
+                                    <field name="x_studio_codigo_postal" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_codigo_postal" style="font-style: italic;">Sem dados</span>
+                                </div>
+                               <label for="x_studio_e_mail" string="E-mail"/>
+                                <div>
+                                    <field name="x_studio_e_mail" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_e_mail" style="font-style: italic;">Sem dados</span>
+                                </div>
+                                <field name="x_studio_mail_server_id" 
+                                       placeholder="Servidor de email para templates (opcional)"/>
+                        </group>
+                        <group string="Credenciais de Integração">
+                            <field name="x_studio_api_key" 
+                                   password="True" 
+                                   placeholder="Sem dados"/>
+                            <field name="x_studio_odoo_api_key" 
+                                   password="True" 
+                                   placeholder="Sem dados"/>                        
+                            <field name="x_studio_odoo_user_id" 
+                                   options="{'no_create': True, 'no_open': True}"
+                                   placeholder="Sem dados"/>                            
+                            <label for="x_studio_token_sibs" string="Token SIBS"/>
+                            <div>
+                                <field name="x_studio_token_sibs"
+                                    nolabel="1"
+                                    widget="text"
+                                    placeholder="Sem dados"
+                                    style="min-height:48px; max-height:96px; overflow:auto;"/>
+
+                                <span class="text-muted"
+                                    invisible="x_studio_token_sibs"
+                                    style="font-style: italic;">
+                                    Sem dados
+                                </span>
+                            </div>
+                            <label for="x_studio_organization_id" string="Organização ID"/>
+                                <div>
+                                    <field name="x_studio_organization_id" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_organization_id" style="font-style: italic;">Sem dados</span>
+                                </div>     
+                            <label for="x_studio_payment_methods_active" string="Métodos de Pagamento Ativos"/>
+                                <div>
+                                    <field name="x_studio_payment_methods_active" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_payment_methods_active" style="font-style: italic;">Sem dados</span>
+                                </div>
+                            <field name="x_studio_status_check" string="Estado Integrador" readonly="1" widget="badge" 
+                                   decoration-success="x_studio_status_check == 'active'"
+                                   decoration-warning="x_studio_status_check == 'suspended'"
+                                   decoration-danger="x_studio_status_check == 'canceled'"
+                                   decoration-muted="x_studio_status_check == 'semValor'"/>
+                        </group>
+                    </group>
+
+                    <group string="Requisitos Gerais">
+                        <group>
+                            <label for="x_studio_tipo" string="Tipo"/>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <field name="x_studio_tipo"
+                                    nolabel="1"
+                                    class="oe_inline"
+                                    widget="badge"
+                                    decoration-info="x_studio_tipo == 'Parceiro'"
+                                    decoration-success="x_studio_tipo == 'Cliente'"
+                                    decoration-warning="x_studio_tipo == 'Fornecedor'"
+                                    decoration-muted="x_studio_tipo == 'Interno'"/>
+                                <span class="text-muted"
+                                    invisible="x_studio_tipo"
+                                    style="font-style: italic;">
+                                    Sem dados
+                                </span>
+                            </div>
+                            <label for="x_studio_licenca" string="Licença"/>
+                                <div>
+                                    <field name="x_studio_licenca" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_licenca" style="font-style: italic;">Sem dados</span>
+                                </div>  
+                        </group>
+                        <group>
+                            <label for="x_studio_secret_url" string="Secret URL"/>
+                                <div>
+                                    <field name="x_studio_secret_url" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_secret_url" style="font-style: italic;">Sem dados</span>
+                                </div>
+                            <label for="x_studio_secret_webhook" string="Secret Webhook"/>
+                                <div>
+                                    <field name="x_studio_secret_webhook" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_secret_webhook" style="font-style: italic;">Sem dados</span>
+                                </div>  
+                            <label for="x_studio_secret_app" string="Secret App"/>
+                                <div>
+                                    <field name="x_studio_secret_app" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_secret_app" style="font-style: italic;">Sem dados</span>
+                                </div>  
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="URLs de Integração">
+                            <field name="x_studio_url_helper" 
+                                   placeholder="https://example.com/api"/>
+                            <label for="x_studio_url_request" string="URL Portal"/>
+                                <div>
+                                    <field name="x_studio_url_request" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_url_request" style="font-style: italic;">Sem dados</span>
+                                </div>  
+                            <label for="x_studio_url_status_pagamento" string="URL Status Pagamento"/>
+                                <div>
+                                    <field name="x_studio_url_status_pagamento" nolabel="1" class="oe_inline"/>
+                                    <span class="text-muted" invisible="x_studio_url_status_pagamento" style="font-style: italic;">Sem dados</span>
+                                </div>
+                        </group>
+                        <group string="Reconciliação Automática">
+                            <field name="x_studio_auto_reconcile" widget="boolean_toggle"/>
+                            <field name="x_studio_reconcile_account_id" 
+                                   invisible="not x_studio_auto_reconcile"
+                                   required="x_studio_auto_reconcile"
+                                   domain="[('account_type', '=', 'asset_receivable')]"
+                                   placeholder="Sem dados"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Campos invisíveis para controlo de visibilidade -->
+                    <field name="x_studio_show_paypal" invisible="1"/>
+                    <field name="x_studio_show_mbway" invisible="1"/>
+                    <field name="x_studio_show_multibanco" invisible="1"/>
+                    <field name="x_studio_show_cartao" invisible="1"/>
+                    
+                    <notebook>
+                        <page string="💳 PayPal" name="paypal" invisible="not x_studio_show_paypal">
+                            <group string="Configuração PayPal">
+                                <label for="x_studio_paypal_terminal_id" string="Terminal ID"/>
+                                        <div>
+                                            <field name="x_studio_paypal_terminal_id" nolabel="1" class="oe_inline" invisible="x_studio_paypal_terminal_id == 0"/>
+                                            <span class="text-muted" invisible="x_studio_paypal_terminal_id and x_studio_paypal_terminal_id != 0" style="font-style: italic;">Sem dados</span>
+                                        </div>  
+                                    <label for="x_studio_paypal_client_id" string="Cliente ID"/>
+                                        <div>
+                                            <field name="x_studio_paypal_client_id" nolabel="1" class="oe_inline"/>
+                                            <span class="text-muted" invisible="x_studio_paypal_client_id" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                            </group>
+                        </page>
+                        
+                        <page string="📱 MB WAY" name="mbway" invisible="not x_studio_show_mbway">
+                            <group string="Configuração MB WAY">
+                                <label for="x_studio_mbway_terminal_id" string="Terminal ID"/>
+                                        <div>
+                                            <field name="x_studio_mbway_terminal_id" nolabel="1" class="oe_inline" invisible="x_studio_mbway_terminal_id == 0"/>
+                                            <span class="text-muted" invisible="x_studio_mbway_terminal_id and x_studio_mbway_terminal_id != 0" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                                    <label for="x_studio_mbway_client_id" string="Cliente ID"/>
+                                        <div>
+                                            <field name="x_studio_mbway_client_id" nolabel="1" class="oe_inline"/>
+                                            <span class="text-muted" invisible="x_studio_mbway_client_id" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                            </group>
+                        </page>
+                        
+                        <page string="🏦 Referências Multibanco" name="multibanco" invisible="not x_studio_show_multibanco">
+                            <group string="Configuração Multibanco">
+                                <label for="x_studio_entidade_pagamento" string="Entidade Pagamento"/>
+                                        <div>
+                                            <field name="x_studio_entidade_pagamento" nolabel="1" class="oe_inline"/>
+                                            <span class="text-muted" invisible="x_studio_entidade_pagamento" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                                    <label for="x_studio_multibanco_terminal_id" string="Terminal ID"/>
+                                        <div>
+                                            <field name="x_studio_multibanco_terminal_id" nolabel="1" class="oe_inline" invisible="x_studio_multibanco_terminal_id == 0"/>
+                                            <span class="text-muted" invisible="x_studio_multibanco_terminal_id and x_studio_multibanco_terminal_id != 0" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                                    <label for="x_studio_multibanco_client_id" string="Cliente ID"/>
+                                        <div>
+                                            <field name="x_studio_multibanco_client_id" nolabel="1" class="oe_inline"/>
+                                            <span class="text-muted" invisible="x_studio_multibanco_client_id" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                                    <label for="x_studio_multibanco_expiry_days" string="Prazo de Validade (dias)"/>
+                                        <div>
+                                            <field name="x_studio_multibanco_expiry_days" nolabel="1" class="oe_inline" placeholder="30" required="1"/>
+                                            <span class="text-muted" invisible="x_studio_multibanco_expiry_days" style="font-style: italic;">Sem dados</span>
+                                        </div>
+                            </group>
+                        </page>
+                        
+                        <page string="💳 Cartão de Crédito" name="cartao" invisible="not x_studio_show_cartao">
+                            <group string="Configuração Cartão">
+                                <label for="x_studio_cartao_client_id" string="Cliente ID"/>
+                                    <div>
+                                        <field name="x_studio_cartao_client_id" nolabel="1" class="oe_inline"/>
+                                        <span class="text-muted" invisible="x_studio_cartao_client_id" style="font-style: italic;">Sem dados</span>
+                                    </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    </data>
+</odoo>

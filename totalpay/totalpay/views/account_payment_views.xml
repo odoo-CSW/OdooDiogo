@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+    <!-- Herdar o formulário de pagamento -->
+    <record id="view_account_payment_form_MBWAY_paypal" model="ir.ui.view">
+        <field name="name">account.payment.form.MBWAY.paypal</field>
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_form"/>
+        <field name="arch" type="xml">
+            
+            <!-- Adicionar botões no header -->
+            <xpath expr="//header" position="inside">
+                <!-- Botão MB WAY -->
+                <button name="action_open_mbway_popup" 
+                        type="object" 
+                        string="Ver MB WAY"
+                        class="btn-primary"
+                        invisible="payment_method_code != 'MBWAY' or state not in ('in_process', 'posted', 'reconciled') or not x_mbway_is_active"
+                        help="Abrir popup MB WAY com cronômetro"/>
+                
+                <!-- Botão Multibanco -->
+                <button name="action_open_multibanco_popup" 
+                        type="object" 
+                        string="Ver Referência MB"
+                        class="btn-primary"
+                        invisible="payment_method_code != 'MULTIBANCO' or state not in ('in_process', 'posted', 'reconciled')"
+                        help="Abrir popup com referências Multibanco"/>
+            </xpath>
+            
+            <!-- Campos invisível e visíveis após payment_method_line_id -->
+            <xpath expr="//field[@name='payment_method_line_id']" position="after">
+                <!-- Campos invisíveis para controlar visibilidade -->
+                <field name="payment_method_code" invisible="1" force_save="1"/>
+                <field name="x_mbway_is_active" invisible="1" force_save="1"/>
+                
+                <!-- Campo MB WAY -->
+                <field name="x_mbway_phone" 
+                       string="Número MB WAY" 
+                       placeholder="9XX XXX XXX" 
+                       widget="phone"
+                       invisible="payment_method_code != 'MBWAY'" 
+                       readonly="state != 'draft'"/>
+                
+                <!-- Campo PayPal -->
+                <field name="x_paypal_email" 
+                       string="E-mail PayPal" 
+                       placeholder="ex: cliente@dominio.com"
+                       widget="email"
+                       invisible="payment_method_code != 'paypal'"
+                       required="payment_method_code == 'paypal'"
+                       readonly="state != 'draft'"/>
+            </xpath>
+
+        </field>
+    </record>
+
+    </data>
+</odoo>

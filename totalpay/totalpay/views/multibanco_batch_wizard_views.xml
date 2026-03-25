@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <record id="view_multibanco_batch_wizard_form" model="ir.ui.view">
+        <field name="name">multibanco.batch.wizard.form</field>
+        <field name="model">multibanco.batch.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Envio de Emails MULTIBANCO" create="false">
+                <sheet>
+                    <div class="text-center" style="margin-bottom:20px;">
+                        <img src="/totalpay/static/img/multi.png" 
+                             alt="Multibanco" 
+                             style="max-width:120px; height:auto;"/>
+                    </div>
+
+                    <div class="text-center"
+                         style="margin-bottom:15px; padding:12px;
+                                background:linear-gradient(135deg,#0066cc 0%,#0052a3 100%);
+                                border-radius:8px;">
+                        <h3 style="color:white; margin:0; font-weight:600; font-size:20px;">
+                            <field name="total_payments"/> Pagamentos MULTIBANCO Criados
+                        </h3>
+                    </div>
+                    
+                    <field name="has_remaining_payments" invisible="1"/>
+                    <field name="has_failures" invisible="1"/>
+                    <field name="success_count" invisible="1"/>
+                    <field name="failed_count" invisible="1"/>
+                    
+                    <div invisible="not has_failures"
+                         style="margin-bottom:15px; padding:12px;
+                                background:#ffe5e5; border-left:4px solid #dc3545;
+                                border-radius:4px;">
+                        <span class="fa fa-exclamation-triangle" style="color:#dc3545; margin-right:6px;" title="Aviso"/>
+                        <strong style="color:#721c24; font-size:13px;">
+                            <field name="success_count"/> pagamentos com sucesso | 
+                            <field name="failed_count"/> falharam
+                        </strong>
+                        <div style="margin-top:5px; font-size:12px; color:#721c24;">
+                            Verifique o estado de cada pagamento abaixo (❌ = Falhou, ✅ = OK)
+                        </div>
+                    </div>
+                    
+                    <div invisible="not has_remaining_payments"
+                         style="margin-bottom:15px; padding:12px;
+                                background:#fff3cd; border-left:4px solid #ff9800;
+                                border-radius:4px; text-align:center;">
+                        <span class="fa fa-hourglass-half" style="color:#ff9800; margin-right:6px; font-size:16px;" title="Aguarde"/>
+                        <strong style="color:#856404; font-size:14px;">
+                            <field name="block_progress_info" readonly="1" nolabel="1"/>
+                        </strong>
+                    </div>
+
+                    <div style="margin-bottom:15px; padding:12px;
+                                background:#e3f2fd; border-left:4px solid #2196f3;
+                                border-radius:4px;">
+                        <span class="fa fa-info-circle" style="color:#2196f3; margin-right:6px;" title="Informação"/>
+                        <strong style="color:#0d47a1; font-size:13px;">
+                            Selecione os clientes que devem receber as referências por email:
+                        </strong>
+                    </div>
+
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom" create="false" delete="false">
+                            <field name="is_failed" column_invisible="1"/>
+                            <field name="send_email" widget="boolean_toggle" readonly="is_failed"/>
+                            <field name="partner_name"/>
+                            <field name="partner_email" placeholder="email@exemplo.com" readonly="is_failed"/>
+                            <field name="payment_ref"/>
+                            <field name="status_symbol" string="Estado"/>
+                        </list>
+                    </field>
+
+                    <div style="margin-top:15px; padding:10px;
+                                background:#fff3cd; border-left:4px solid #ffc107;
+                                border-radius:4px;">
+                        <span class="fa fa-lightbulb-o" style="color:#ff9800; margin-right:6px;"/>
+                        <span style="color:#856404; font-size:12px;">
+                            <strong>Dica:</strong> Desmarque "Enviar Email?" para clientes que não devem receber email. 
+                            Você pode editar o email diretamente na tabela.
+                        </span>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <button name="action_send_emails"
+                            string="Enviar Emails Selecionados"
+                            type="object"
+                            icon="fa-paper-plane"
+                            class="btn-primary"/>
+                    <button string="Continuar sem Enviar"
+                            special="cancel"
+                            class="btn-secondary"/>
+                    <div invisible="not has_remaining_payments" class="text-muted" style="margin-top:8px; font-size:11px;">
+                        <i class="fa fa-info-circle"/> Após processar este bloco, o próximo será aberto automaticamente
+                    </div>
+                </footer>
+            </form>
+        </field>
+    </record>
+    </data>
+</odoo>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>        
+    <data noupdate="0">
+        <record id="email_template_multibanco" model="mail.template">
+            <field name="name">TotalPay - Dados MULTIBANCO</field>
+            <field name="model_id" ref="totalpay.model_x_csw_totalpay"/>
+            <field name="subject">Instruções de Pagamento MULTIBANCO - {{ object.x_name }}</field>
+            <field name="email_to">{{ object.x_studio_partner_email or '' }}</field>
+            <field name="body_html" type="html">
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff; border: 4px solid #0066cc; border-radius: 10px;">
+    
+    <!-- Logo Multibanco -->
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="https://www.multibanco.pt/wp-content/uploads/2025/10/MULTIBANCO-ico.svg" 
+             alt="Multibanco" 
+             style="max-width: 80px; height: auto;"/>
+    </div>
+
+    <!-- Cabeçalho -->
+    <div style="text-align: center; margin-bottom: 15px; padding: 12px;
+                background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+                border-radius: 8px;">
+        <h3 style="color: black; margin: 0; font-weight: 600; font-size: 22px;">
+            Dados para Pagamento
+        </h3>
+    </div>
+
+    <!-- Saudação -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <p style="font-size: 15px; color: #333; line-height: 1.5; margin: 0;">
+            Caro/a <strong><t t-out="object.x_studio_partner_id.name or 'Cliente'">Cliente</t></strong>,
+        </p>
+        <p style="font-size: 14px; color: #666; line-height: 1.5; margin: 10px 0 0 0;">
+            Para concluir o seu pagamento, utilize os seguintes dados no terminal Multibanco ou na sua aplicação de homebanking:
+        </p>
+    </div>
+
+    <!-- Dados Multibanco -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 2px solid #0066cc; margin-bottom: 15px;">
+
+        <!-- Entidade -->
+        <div style="margin-bottom: 12px; padding: 10px; background: white;
+                    border-left: 4px solid #0066cc; border-radius: 4px;">
+            <div style="color: #666; font-size: 11px; font-weight: 600;
+                        text-transform: uppercase; margin-bottom: 4px;">
+                Entidade
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: #0066cc;
+                        font-family: 'Courier New', monospace; letter-spacing: 4px;">
+                <t t-out="object.x_studio_mb_entidade or ''">11249</t>
+            </div>
+        </div>
+
+        <!-- Referência -->
+        <div style="margin-bottom: 12px; padding: 10px; background: white;
+                    border-left: 4px solid #0066cc; border-radius: 4px;">
+            <div style="color: #666; font-size: 11px; font-weight: 600;
+                        text-transform: uppercase; margin-bottom: 4px;">
+                Referência
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: #0066cc;
+                        font-family: 'Courier New', monospace; letter-spacing: 3px; word-break: break-all;">
+                <t t-out="object.x_studio_mb_referencia or ''">123 456 789</t>
+            </div>
+        </div>
+
+        <!-- Valor -->
+        <div style="padding: 10px; background: white;
+                    border-left: 4px solid #28a745; border-radius: 4px;">
+            <div style="color: #666; font-size: 11px; font-weight: 600;
+                        text-transform: uppercase; margin-bottom: 4px;">
+                Valor a Pagar
+            </div>
+            <div style="font-size: 28px; font-weight: 700; color: #28a745;">
+                <t t-out="'%.2f' % (object.x_studio_mb_valor or object.x_studio_value or 0.00)">100.00</t> €
+            </div>
+        </div>
+    </div>
+
+    <!-- Validade dinâmica -->
+    <t t-set="now" t-value="datetime.datetime.now()"/>
+    <t t-set="expiry" t-value="object.x_studio_mb_expiry_date if object.x_studio_mb_expiry_date else (object.create_date + datetime.timedelta(days=object.x_studio_conf_modulo.x_studio_multibanco_expiry_days or 3) if object.create_date else None)"/>
+    <t t-if="expiry">
+        <t t-set="delta" t-value="expiry - now"/>
+        <t t-set="days" t-value="max(0, delta.days)"/>
+        <div style="margin-bottom: 12px; padding: 10px;
+                    background: #e3f2fd; border-left: 4px solid #2196f3;
+                    border-radius: 4px;">
+            <span style="color: #1976d2; margin-right: 6px; font-size: 14px;">ℹ️</span>
+            <strong style="color: #0d47a1; font-size: 13px;">
+                Validade: <t t-out="days">3</t> dias
+            </strong>
+        </div>
+    </t>
+    <t t-else="">
+        <div style="margin-bottom: 12px; padding: 10px;
+                    background: #e3f2fd; border-left: 4px solid #2196f3;
+                    border-radius: 4px;">
+            <span style="color: #1976d2; margin-right: 6px; font-size: 14px;">ℹ️</span>
+            <strong style="color: #0d47a1; font-size: 13px;">
+                Validade: 3 dias
+            </strong>
+        </div>
+    </t>
+
+    <!-- Tempo restante dinâmico -->
+    <t t-set="now" t-value="datetime.datetime.now()"/>
+    <t t-set="expiry" t-value="object.x_studio_mb_expiry_date if object.x_studio_mb_expiry_date else (object.create_date + datetime.timedelta(days=30) if object.create_date else None)"/>
+    <t t-if="expiry">
+        <t t-set="delta" t-value="expiry - now"/>
+        <t t-set="days" t-value="max(0, delta.days)"/>
+        
+        <!-- Aviso urgente (3 dias ou menos) -->
+        <div t-if="days &lt;= 3" style="margin-bottom: 12px; padding: 10px;
+                    background: #fff3cd; border-left: 4px solid #ffc107;
+                    border-radius: 4px;">
+            <span style="color: #ff9800; margin-right: 6px; font-size: 14px;">🕐</span>
+            <strong style="color: #856404; font-size: 13px;">
+                <t t-if="days == 0 and delta.total_seconds() &lt; 0">❌ Referência expirada</t>
+                <t t-elif="days == 0">⚠️ Último dia - expira hoje</t>
+                <t t-elif="days == 1">⚠️ Resta 1 dia</t>
+                <t t-else="">⚠️ Restam <t t-out="days">3</t> dias</t>
+            </strong>
+        </div>
+        
+        <!-- Normal (mais de 3 dias) -->
+        <div t-if="days &gt; 3" style="margin-bottom: 12px; padding: 10px;
+                    background: #d4edda; border-left: 4px solid #28a745;
+                    border-radius: 4px;">
+            <span style="color: #28a745; margin-right: 6px; font-size: 14px;">✓</span>
+            <strong style="color: #155724; font-size: 13px;">
+                Restam <t t-out="days">30</t> dias
+            </strong>
+        </div>
+    </t>
+    <t t-else="">
+        <!-- Fallback -->
+        <div style="margin-bottom: 12px; padding: 10px;
+                    background: #d4edda; border-left: 4px solid #28a745;
+                    border-radius: 4px;">
+            <span style="color: #28a745; margin-right: 6px; font-size: 14px;">✓</span>
+            <strong style="color: #155724; font-size: 13px;">
+                Restam 30 dias
+            </strong>
+        </div>
+    </t>
+
+    <!-- Referência do Pagamento -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <p style="font-size: 13px; color: #666; line-height: 1.5; margin: 0;">
+            Referência do Pagamento: <strong style="color: #333;"><t t-out="object.x_name or ''">PAY00123</t></strong>
+        </p>
+    </div>
+
+    <!-- Mensagem final -->
+    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <p style="font-size: 14px; color: #333; line-height: 1.5; margin: 0 0 10px 0;">
+            Após efetuar o pagamento, a confirmação será processada automaticamente.
+        </p>
+        <p style="font-size: 14px; color: #333; line-height: 1.5; margin: 0;">
+            Obrigado pela sua preferência!
+        </p>
+    </div>
+
+    <!-- Rodapé -->
+    <div style="text-align: center; padding: 15px 10px; color: #999; font-size: 11px; line-height: 1.5;">
+        <p style="margin: 5px 0; font-weight: 600; color: #666;">
+            <t t-out="object.x_studio_name or user.company_id.name or 'Empresa'">Empresa</t>
+        </p>
+        <p style="margin: 5px 0;">
+            Este é um email automático, por favor não responda.
+        </p>
+    </div>
+</div>
+            </field>
+        </record>
+    </data>
+</odoo>

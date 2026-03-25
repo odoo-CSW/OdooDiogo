@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="module_category_totalpay" model="ir.module.category">
+            <field name="name">Total Pay</field>
+            <field name="description">Perfis de acesso do módulo Total Pay</field>
+            <field name="sequence">36</field>
+        </record>
+
+        <record id="privilege_totalpay_access" model="res.groups.privilege">
+            <field name="name">Total Pay</field>
+            <field name="description">Nível de permissões do módulo Total Pay</field>
+            <field name="sequence">10</field>
+            <field name="category_id" ref="totalpay.module_category_totalpay"/>
+        </record>
+
+        <!-- Utilizador Total Pay: acesso a pagamentos, sem configurações -->
+        <record id="group_user" model="res.groups">
+            <field name="name">Total Pay / Utilizador</field>
+            <field name="privilege_id" ref="totalpay.privilege_totalpay_access"/>
+            <field name="implied_ids" eval="[(6, 0, [])]"/>
+        </record>
+
+        <!-- Administrador Total Pay: acesso total incluindo configurações -->
+        <record id="group_admin" model="res.groups">
+            <field name="name">Total Pay / Administrador</field>
+            <field name="privilege_id" ref="totalpay.privilege_totalpay_access"/>
+            <field name="implied_ids" eval="[(6, 0, [ref('totalpay.group_user')])]"/>
+        </record>
+
+    </data>
+</odoo>

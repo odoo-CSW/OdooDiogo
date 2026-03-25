@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Estado: Aprovado -->
+        <record id="1" model="x_csw_totalpay_stage">
+            <field name="x_name">Aprovado</field>
+            <field name="x_studio_sequence">10</field>
+        </record>
+
+        <!-- Estado: Pendente -->
+        <record id="2" model="x_csw_totalpay_stage">
+            <field name="x_name">Pendente</field>
+            <field name="x_studio_sequence">20</field>
+        </record>
+
+        <!-- Estado: Cancelado -->
+        <record id="3" model="x_csw_totalpay_stage">
+            <field name="x_name">Cancelado</field>
+            <field name="x_studio_sequence">30</field>
+        </record>
+
+        <!-- Estado: Reembolso -->
+        <record id="4" model="x_csw_totalpay_stage">
+            <field name="x_name">Reembolso</field>
+            <field name="x_studio_sequence">40</field>
+        </record>
+
+        <!-- Estado: Em Processamento -->
+        <record id="5" model="x_csw_totalpay_stage">
+            <field name="x_name">Em Processamento</field>
+            <field name="x_studio_sequence">50</field>
+        </record>
+
+        <!-- Estado: Falhou -->
+        <record id="6" model="x_csw_totalpay_stage">
+            <field name="x_name">Falhou</field>
+            <field name="x_studio_sequence">60</field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+    <!-- Action: Suporte -->
+    <record id="action_x_csw_totalpay_suporte" model="ir.actions.server">
+        <field name="name">Suporte Técnico</field>
+        <field name="model_id" ref="model_x_csw_totalpay_suporte"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_suporte()</field>
+    </record>
+
+    <!-- Menu: Suporte -->
+    <menuitem id="menu_csw_suporte"
+              name="Suporte"
+              parent="menu_csw_root"
+              action="action_x_csw_totalpay_suporte"
+              sequence="40"/>
+
+    <!-- Form View: Suporte -->
+    <record id="view_x_csw_totalpay_suporte_form" model="ir.ui.view">
+        <field name="name">x_csw_totalpay_suporte.form</field>
+        <field name="model">x_csw_totalpay_suporte</field>
+        <field name="arch" type="xml">
+            <form string="Suporte Técnico Total Pay" create="false" edit="false" delete="false">
+                <sheet>
+                    <!-- Logo e Título -->
+                    <div class="text-center" style="margin-bottom: 20px;">
+                        <img src="/totalpay/static/img/logo.png" 
+                             alt="Total Pay" 
+                             style="max-width: 150px; height: auto;"/>
+                        <h2 style="color: #0066cc; margin-top: 15px; margin-bottom: 5px;">
+                            Suporte Técnico Total Pay
+                        </h2>
+                        <p style="color: #666; font-size: 14px; margin: 0;">
+                            Estamos aqui para ajudar!
+                        </p>
+                    </div>
+
+                    <!-- Informações de Contacto -->
+                    <group>
+                        <group string="📋 Informações de Contacto">
+                            <field name="x_studio_support_empresa" readonly="1"/>
+                            <field name="x_studio_support_telefone" readonly="1" widget="phone"/>
+                            <field name="x_studio_support_email" readonly="1" widget="email"/>
+                            <field name="x_studio_support_morada" readonly="1"/>
+                        </group>
+                        
+                        <group string="🔧 Informações Técnicas">
+                            <field name="x_studio_support_versao" readonly="1"/>
+                            <field name="x_studio_support_certificacao" readonly="1" force_save="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Link para Formulário de Suporte -->
+                    <group>
+                        <group string="🌐 Suporte Online">
+                            <field name="x_studio_support_link_suporte" readonly="1" widget="url" 
+                                   string="Formulário de Suporte"/>
+                        </group>
+                    </group>
+
+                    <!-- Notas de Ajuda -->
+                    <div style="margin-top: 20px; padding: 15px; background: #f0f8ff; border-left: 4px solid #0066cc; border-radius: 5px;">
+                        <h4 style="color: #0066cc; margin-top: 0;">
+                            <span class="fa fa-info-circle" title="Informação"/> Como podemos ajudar?
+                        </h4>
+                        <ul style="margin-bottom: 0; color: #333;">
+                            <li>📧 Envie um email para <strong>geral@comsoftweb.pt</strong></li>
+                            <li>📞 Ligue para <strong>+351 236 210 600</strong></li>
+                            <li>🌐 Preencha o formulário online no nosso website</li>
+                            <li>💬 Descreva o problema detalhadamente para um atendimento mais rápido</li>
+                        </ul>
+                    </div>
+
+                    <!-- Horário de Atendimento -->
+                    <div style="margin-top: 15px; padding: 15px; background: #fff9e6; border-left: 4px solid #ffc107; border-radius: 5px;">
+                        <h4 style="color: #ff9800; margin-top: 0;">
+                            <span class="fa fa-clock-o" title="Horário"/> Horário de Atendimento
+                        </h4>
+                        <div style="color: #333; line-height: 1.8;">
+                            <div style="margin-bottom: 8px;">
+                                <strong>Segunda a Sexta:</strong>
+                            </div>
+                            <div style="margin-left: 20px; margin-bottom: 8px;">
+                                <span class="fa fa-sun-o" style="color: #ff9800; margin-right: 5px;" title="Manhã"/> Manhã: <strong>09:00 - 13:00</strong><br/>
+                                <span class="fa fa-moon-o" style="color: #ff9800; margin-right: 5px;" title="Tarde"/> Tarde: <strong>14:30 - 18:30</strong>
+                            </div>
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ffe6a5;">
+                                <span class="fa fa-times-circle" style="color: #dc3545; margin-right: 5px;" title="Encerrado"/>
+                                <strong>Sábado, Domingo e Feriados:</strong> Encerrado
+                            </div>
+                        </div>
+                    </div>
+                </sheet>
+
+                <footer>
+                    <button string="Fechar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    </data>
+</odoo>

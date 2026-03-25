@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- ===================================================================== -->
+        <!--  SERVER ACTIONS                                                       -->
+        <!-- ===================================================================== -->
+        
+        <record id="action_server_payment_approved" model="ir.actions.server">
+            <field name="name">Execute Code</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="state">code</field>
+            <field name="code">
+        for rec in records:
+            rec.with_context(from_automation=True).sudo().action_mark_payment_approved()
+            </field>
+        </record>
+
+        <record id="action_server_payment_canceled" model="ir.actions.server">
+            <field name="name">Execute Code</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="state">code</field>
+            <field name="code">
+        for rec in records:
+            rec.with_context(from_automation=True).sudo().action_mark_payment_terminal()
+            </field>
+        </record>
+
+        <record id="action_server_payment_failed" model="ir.actions.server">
+            <field name="name">Execute Code</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="state">code</field>
+            <field name="code">
+        for rec in records:
+            rec.with_context(from_automation=True).sudo().action_mark_payment_terminal()
+            </field>
+        </record>
+
+        <!-- ====================================================================== -->
+        <!--  AUTOMATED ACTIONS                                                   -->
+        <!-- ====================================================================== -->
+
+        <record id="action_payment_approved" model="base.automation">
+            <field name="name">CSW Connector - Pagamento Aprovado</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="active" eval="True"/>
+            <field name="trigger">on_write</field>
+            <field name="filter_pre_domain">[('x_studio_stage_id', '!=', 1)]</field>
+            <field name="filter_domain">[('x_studio_stage_id', '=', 1)]</field>
+            <field name="action_server_ids" eval="[(6, 0, [ref('action_server_payment_approved')])]"/>
+        </record>
+
+        <record id="action_payment_canceled" model="base.automation">
+            <field name="name">CSW Connector - Pagamento Cancelado</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="active" eval="True"/>
+            <field name="trigger">on_write</field>
+            <field name="filter_pre_domain">[('x_studio_stage_id', '!=', 3)]</field>
+            <field name="filter_domain">[('x_studio_stage_id', '=', 3)]</field>
+            <field name="action_server_ids" eval="[(6, 0, [ref('action_server_payment_canceled')])]"/>
+        </record>
+
+        <record id="action_payment_failed" model="base.automation">
+            <field name="name">CSW Connector - Pagamento Falhou</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="active" eval="True"/>
+            <field name="trigger">on_write</field>
+            <field name="filter_pre_domain">[('x_studio_stage_id', '!=', 6)]</field>
+            <field name="filter_domain">[('x_studio_stage_id', '=', 6)]</field>
+            <field name="action_server_ids" eval="[(6, 0, [ref('action_server_payment_failed')])]"/>
+        </record>
+
+        <!-- ===================================================================== -->
+        <!--  ACTION MENU: Repetir Pagamentos Falhados                            -->
+        <!-- ===================================================================== -->
+        
+        <record id="action_server_retry_failed_payments" model="ir.actions.server">
+            <field name="name">Repetir Pagamento</field>
+            <field name="model_id" ref="model_x_csw_totalpay"/>
+            <field name="binding_model_id" eval="False"/>
+            <field name="binding_type">action</field>
+            <field name="state">code</field>
+            <field name="code">
+                if records:
+                    action = records.action_retry_payment()
+            </field>
+        </record>
+    </data>
+</odoo>

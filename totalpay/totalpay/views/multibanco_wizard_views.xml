@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <record id="view_multibanco_wizard_form" model="ir.ui.view">
+        <field name="name">multibanco.wizard.form</field>
+        <field name="model">multibanco.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Referência MULTIBANCO" create="false">
+                <sheet>
+
+                    <!-- Logo Multibanco -->
+                    <div class="text-center" style="margin-bottom:20px;">
+                        <img src="/totalpay/static/img/multi.png" 
+                             alt="Multibanco" 
+                             style="max-width:120px; height:auto;"/>
+                    </div>
+
+                    <!-- Cabeçalho -->
+                    <div class="text-center"
+                         style="margin-bottom:15px; padding:12px;
+                                background:linear-gradient(135deg,#0066cc 0%,#0052a3 100%);
+                                border-radius:8px;">
+                        <h3 style="color:white; margin:0; font-weight:600; font-size:22px;">
+                            Dados para Pagamento
+                        </h3>
+                    </div>
+
+                    <!-- Dados Multibanco -->
+                    <div style="background:#f8f9fa; padding:15px;
+                                border-radius:8px; border:2px solid #0066cc;">
+
+                        <!-- Entidade -->
+                        <div style="margin-bottom:12px; padding:10px; background:white;
+                                    border-left:4px solid #0066cc; border-radius:4px;">
+                            <div style="color:#666; font-size:11px; font-weight:600;
+                                        text-transform:uppercase; margin-bottom:4px;">
+                                Entidade
+                            </div>
+                            <div style="font-size:28px; font-weight:700; color:#0066cc;
+                                        font-family:'Courier New', monospace; letter-spacing:4px;">
+                                <field name="entidade" nolabel="1" readonly="1"/>
+                            </div>
+                        </div>
+
+                        <!-- Referência -->
+                        <div style="margin-bottom:12px; padding:10px; background:white;
+                                    border-left:4px solid #0066cc; border-radius:4px;">
+                            <div style="color:#666; font-size:11px; font-weight:600;
+                                        text-transform:uppercase; margin-bottom:4px;">
+                                Referência
+                            </div>
+                            <div style="font-size:28px; font-weight:700; color:#0066cc;
+                                        font-family:'Courier New', monospace; letter-spacing:3px;">
+                                <field name="referencia" nolabel="1" readonly="1"/>
+                            </div>
+                        </div>
+
+                        <!-- Valor -->
+                        <div style="padding:10px; background:white;
+                                    border-left:4px solid #28a745; border-radius:4px;">
+                            <div style="color:#666; font-size:11px; font-weight:600;
+                                        text-transform:uppercase; margin-bottom:4px;">
+                                Valor a Pagar
+                            </div>
+                            <div style="font-size:28px; font-weight:700; color:#28a745;">
+                                <field name="valor" nolabel="1" readonly="1"/> €
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validade fixa -->
+                    <div style="margin-top:12px; padding:10px;
+                                background:#e3f2fd; border-left:4px solid #2196f3;
+                                border-radius:4px;">
+                        <span class="fa fa-info-circle" title="Informação"
+                              style="color:#1976d2; margin-right:6px;"/>
+                        <strong style="color:#0d47a1; font-size:13px;">
+                            Validade: 30 dias
+                        </strong>
+                    </div>
+                    
+                    <!-- Tempo restante dinâmico -->
+                    <field name="days_remaining" invisible="1"/>
+                    <div invisible="days_remaining &gt; 3"
+                         style="margin-top:12px; padding:10px;
+                                background:#fff3cd; border-left:4px solid #ffc107;
+                                border-radius:4px;">
+                        <span class="fa fa-clock-o" title="Tempo Restante"
+                              style="color:#ff9800; margin-right:6px;"/>
+                        <strong style="color:#856404; font-size:13px;">
+                            <field name="expiry_message" nolabel="1" readonly="1"/>
+                        </strong>
+                    </div>
+                    
+                    <div invisible="days_remaining &lt;= 3"
+                         style="margin-top:12px; padding:10px;
+                                background:#d4edda; border-left:4px solid #28a745;
+                                border-radius:4px;">
+                        <span class="fa fa-check-circle" title="Tempo Restante"
+                              style="color:#28a745; margin-right:6px;"/>
+                        <strong style="color:#155724; font-size:13px;">
+                            <field name="expiry_message" nolabel="1" readonly="1"/>
+                        </strong>
+                    </div>
+
+                    <!-- Email -->
+                    <group style="margin-top:15px;">
+                        <field name="partner_email"
+                               string="Email do Destinatário"
+                               placeholder="email@exemplo.com"
+                               widget="email"/>
+                    </group>
+
+                    <div style="margin:-10px 0 15px 0; padding-left:150px;
+                                color:#666; font-size:11px; font-style:italic;">
+                        <span class="fa fa-info-circle" style="margin-right:3px;"/>
+                        Preencha o email do cliente para enviar as referências
+                    </div>
+
+                    <!-- Campos técnicos -->
+                    <group invisible="1">
+                        <field name="payment_ref"/>
+                        <field name="currency_id"/>
+                        <field name="partner_id"/>
+                        <field name="connector_id"/>
+                        <field name="payment_id"/>
+                    </group>
+
+                </sheet>
+
+                <footer>
+                    <button name="action_send_email"
+                            string="Enviar por Email"
+                            type="object"
+                            icon="fa-paper-plane"
+                            class="btn-primary"/>
+                    <button string="Fechar"
+                        special="cancel"
+                        class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    </data>
+</odoo>
