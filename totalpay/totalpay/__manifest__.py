@@ -1,6 +1,6 @@
 {
     "name": "Total Pay",
-    "version": "1.2.27",
+    "version": "1.2.28",
     "summary": "Integração Total Pay - Pagamentos MB WAY, Multibanco, PayPal e Cartão",
     "description": """
         Total Pay - Módulo de Integração de Pagamentos
@@ -14,6 +14,12 @@
         * ✅ Cartão de Crédito
         * 📊 Gestão completa de estados de pagamento
         * 🔄 Verificação automática de status dos pagamentos
+        
+        Requisitos do Sistema:
+        ----------------------
+        ⚠️ **Linux On-Premise**: Requer Nginx configurado.
+        
+        ℹ️ Não necessário em: Odoo.sh ou Windows On-Premise
         
         Importante - Reembolsos e Cancelamentos:
         ----------------------------------------

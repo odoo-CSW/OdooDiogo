@@ -10,7 +10,10 @@ const totalpayPopupListener = {
         const orm = env.services.orm;
         const action = env.services.action;
 
+        // Se bus_service não está disponível, não inicializar listener
+        // A validação será mostrada apenas se o serviço não funcionar
         if (!busService) {
+            console.info('Popups não disponíveis para a aplicação TotalPay: Contacte o administrador do sistema.');
             return;
         }
 
@@ -120,6 +123,14 @@ const totalpayPopupListener = {
 
             // Marcar pagamentos como tendo popup aberto
             paymentIds.forEach(pid => openPopups.add(pid));
+
+            // Validar infraestrutura antes de tentar abrir popup
+            if (!busService || !orm || !action) {
+                console.warn('[TotalPay] Serviços não disponíveis! Contacte o administrador do sistema.');
+                alert('⚠️ Serviço de notificações não está ativo.\n\nNginx e WebSocket são necessários para popups em tempo real.\n\nPor favor, contacte o administrador de sistema.');
+                paymentIds.forEach(pid => openPopups.delete(pid));
+                return;
+            }
 
             try {
                 const actionData = await orm.call(
