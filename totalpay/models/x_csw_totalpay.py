@@ -96,6 +96,7 @@ class CSWTotalPay(models.Model):
     x_studio_mb_referencia = fields.Char(string="MB Referência", readonly=True)
     x_studio_mb_valor = fields.Float(string="MB Valor", readonly=True)
     x_studio_mb_expiry_date = fields.Datetime(string="MB Data Expiração", readonly=True)
+    x_studio_mb_expiry_days = fields.Integer(string="MB Dias Validade", readonly=True, help="Número de dias de validade usado ao gerar esta referência")
 
     x_studio_stage_id = fields.Many2one(
         "x_csw_totalpay_stage",
@@ -192,6 +193,7 @@ class CSWTotalPay(models.Model):
             'partner_id': self.account_payment_id.partner_id.id if self.account_payment_id and self.account_payment_id.partner_id else False,
             'connector_id': self.id,
             'partner_email': partner_email or '',
+            'expiry_days_used': self.x_studio_mb_expiry_days,
         })
         return {
             'name': _('MULTIBANCO - Reenviar Email'),
@@ -226,6 +228,13 @@ class CSWTotalPay(models.Model):
             'x_last_status_check',
             'x_studio_date_stop',
             'x_studio_error_message',
+            'x_studio_mb_entidade',
+            'x_studio_mb_referencia',
+            'x_studio_mb_valor',
+            'x_studio_mb_expiry_date',
+            'x_studio_mb_expiry_days',
+            'x_api_transaction_id',
+            'x_studio_date_start',
         }
 
         from_authorized_source = (

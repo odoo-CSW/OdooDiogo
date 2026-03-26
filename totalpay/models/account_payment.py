@@ -156,15 +156,9 @@ class AccountPayment(models.Model):
                 _('Não é possível gerar mais de 1 pagamento MB WAY em simultâneo.')
             )
 
-        # Defesa para fluxos que chamam create() um a um dentro da mesma ação/request
-        # (skip no wizard para evitar falso positivo em pagamentos individuais)
-        if mbway_count and not self.env.context.get('from_payment_register_wizard'):
-            current_count = getattr(self.env.cr, '_totalpay_mbway_create_count', 0)
-            if current_count + mbway_count > 1:
-                raise UserError(
-                    _('Não é possível gerar mais de 1 pagamento MB WAY na mesma ação.')
-                )
-            setattr(self.env.cr, '_totalpay_mbway_create_count', current_count + mbway_count)
+        # A validação aqui deve atuar apenas no batch atual de create().
+        # Não usar estado global do cursor/request para evitar falso positivo
+        # em fluxos não-TotalPay (ex.: confirmação de orçamento/subscrições).
 
     def _get_planned_payment_count_from_context(self):
         planned_count = self.env.context.get('totalpay_planned_payment_count')
@@ -263,9 +257,7 @@ class AccountPayment(models.Model):
     def _prepare_connector_values(self, method_code, config, is_batch=False):
         self.ensure_one()
         
-        date_start = fields.Datetime.now()
-        date_stop = date_start + timedelta(minutes=constants.MBWAY_TIMEOUT_MINUTES) if method_code == constants.PAYMENT_METHOD_MBWAY else False
-        
+        # Não definir date_start/date_stop aqui - será definido com o timestamp da API no callback
         phone_value = self.x_mbway_phone or (self.partner_id.phone or '') if method_code == constants.PAYMENT_METHOD_MBWAY else ''
         email_value = self.x_paypal_email or (self.partner_id.email or '') if method_code == 'PAYPAL' else ''
         
@@ -278,8 +270,8 @@ class AccountPayment(models.Model):
             'x_studio_currency_id': self.currency_id.id if self.currency_id else False,
             'x_studio_value': self.amount,
             'x_studio_date_hour_payment': self.create_date,
-            'x_studio_date_start': date_start,
-            'x_studio_date_stop': date_stop,
+            'x_studio_date_start': False,
+            'x_studio_date_stop': False,
             'x_studio_metodo_pagamento': method_code,
             'x_studio_partner_phone': phone_value,
             'x_studio_partner_email': email_value,
@@ -375,6 +367,7 @@ class AccountPayment(models.Model):
             'partner_id': self.partner_id.id if self.partner_id else False,
             'partner_email': self.partner_id.email if self.partner_id and self.partner_id.email else '',
             'connector_id': connector.id,
+            'expiry_days_used': connector.x_studio_mb_expiry_days,
         })
 
         return {
@@ -598,18 +591,8 @@ class AccountPayment(models.Model):
                 _('Não é possível processar mais de 1 pagamento MB WAY em simultâneo.')
             )
 
-        # Defesa idempotente para fluxos que validam o mesmo pagamento mais de uma vez
-        # na mesma ação/request: só bloqueia quando aparece mais de 1 pagamento DISTINTO.
-        if self.env.context.get('from_payment_register_wizard'):
-            return
-        current_ids = set(getattr(self.env.cr, '_totalpay_mbway_post_ids', set()))
-        new_ids = set(mbway_payments.ids)
-        merged_ids = current_ids | new_ids
-        if len(merged_ids) > 1:
-            raise UserError(
-                _('Não é possível processar mais de 1 pagamento MB WAY na mesma ação.')
-            )
-        setattr(self.env.cr, '_totalpay_mbway_post_ids', merged_ids)
+        # A validação deve considerar apenas o recordset atual do post().
+        # Evita bloquear fluxos externos que partilham o mesmo request.
 
     def _notify_totalpay_popups(self):
         """Decide quais popups notificar baseado nos métodos de pagamento"""

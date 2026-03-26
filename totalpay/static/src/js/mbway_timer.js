@@ -27,6 +27,14 @@ patch(FormController.prototype, {
             this._intervals = [];
             this._wizardId = this.props.resId; // ID único do wizard para identificar este popup
             this._popupRoot = null; // Cache do elemento raiz do popup
+            this._skipAbandonReport = false;
+            this._abandonReported = false;
+            this._onPageHide = () => {
+                if (!this._skipAbandonReport) {
+                    this._reportPopupAbandon();
+                }
+            };
+            window.addEventListener('pagehide', this._onPageHide);
             
             // Usar onMounted para garantir que o DOM está renderizado
             onMounted(() => {
@@ -145,6 +153,15 @@ patch(FormController.prototype, {
     },
     
     willUnmount() {
+        if (!this._skipAbandonReport) {
+            this._reportPopupAbandon();
+        }
+
+        if (this._onPageHide) {
+            window.removeEventListener('pagehide', this._onPageHide);
+            this._onPageHide = null;
+        }
+
         // Marcar como destruído PRIMEIRO para parar todos os callbacks
         this._isDestroyed = true;
         
@@ -172,6 +189,20 @@ patch(FormController.prototype, {
         // Popup completamente destruído
         
         super.willUnmount?.(...arguments);
+    },
+
+    _reportPopupAbandon() {
+        if (this._abandonReported || this._skipAbandonReport) {
+            return;
+        }
+
+        const wizardId = this.props?.resId;
+        if (!wizardId || !this.orm) {
+            return;
+        }
+
+        this._abandonReported = true;
+        this.orm.call('mbway.timer.wizard', 'action_popup_abandoned', [wizardId]).catch(() => {});
     },
     
     /**
@@ -244,6 +275,7 @@ patch(FormController.prototype, {
                 
                 // Se já está Falhado ao abrir
                 if (stageId === STAGE_FALHOU) {
+                    this._skipAbandonReport = true;
                     this.notification.add(
                         `O pagamento ${connector.x_name} falhou. Verifique a configuração e tente novamente.`,
                         {
@@ -262,50 +294,32 @@ patch(FormController.prototype, {
     },
 
     async startMbwayTimer() {
-        // Buscar o connector para calcular o tempo restante REAL
-        let timeLeft = MBWAY_TIMEOUT; // Default
-        let dateStop = null;
+        // Usar o tempo já calculado pelo wizard Python (evita latência de queries)
+        let initialTimeLeft = MBWAY_TIMEOUT; // Tempo inicial (não muda)
+        let startTimestamp = Date.now(); // Momento em que lemos o tempo
         
         try {
             if (this._isDestroyed) return;
             
             const wizardId = this.props.resId;
             if (wizardId) {
-                const wizardData = await this.orm.read('mbway.timer.wizard', [wizardId], ['payment_id']);
-                if (this._isDestroyed || !wizardData || !wizardData[0] || !wizardData[0].payment_id) return;
+                // Ler o time_remaining que o Python já calculou
+                const wizardData = await this.orm.read('mbway.timer.wizard', [wizardId], ['time_remaining', 'payment_id']);
+                if (this._isDestroyed || !wizardData || !wizardData[0]) return;
                 
-                const paymentId = wizardData[0].payment_id[0];
+                // Capturar o timestamp IMEDIATAMENTE após ler para minimizar drift
+                startTimestamp = Date.now();
                 
-                // Buscar o connector para obter o x_studio_date_stop e create_date
-                const connectors = await this.orm.searchRead(
-                    'x_csw_totalpay',
-                    [['account_payment_id', '=', paymentId]],
-                    ['x_studio_date_stop', 'create_date'],
-                    { limit: 1 }
-                );
-                
-                if (this._isDestroyed) return;
-                
-                if (connectors && connectors.length > 0) {
-                    const connector = connectors[0];
-                    
-                    if (connector.x_studio_date_stop) {
-                        // Calcular tempo restante real baseado no date_stop (mais preciso)
-                        dateStop = new Date(connector.x_studio_date_stop + 'Z'); // Z força UTC
-                        const now = new Date();
-                        const diffSeconds = Math.floor((dateStop - now) / 1000);
-                        timeLeft = Math.max(0, diffSeconds);
-                    } else if (connector.create_date) {
-                        // Fallback: calcular baseado no create_date
-                        const createDate = new Date(connector.create_date + 'Z');
-                        const now = new Date();
-                        const elapsedSeconds = Math.floor((now - createDate) / 1000);
-                        timeLeft = Math.max(0, MBWAY_TIMEOUT - elapsedSeconds);
-                    }
+                // Usar o tempo calculado pelo Python (sem latência)
+                if (wizardData[0].time_remaining !== undefined && wizardData[0].time_remaining !== null) {
+                    initialTimeLeft = Math.max(0, wizardData[0].time_remaining);
                 }
+                
+                this._paymentId = wizardData[0].payment_id ? wizardData[0].payment_id[0] : null;
             }
         } catch (error) {
             // Usar tempo default
+            startTimestamp = Date.now();
         }
         
         const updateTimer = () => {
@@ -314,17 +328,9 @@ patch(FormController.prototype, {
                 return;
             }
             
-            // Se temos dateStop, recalcular o tempo real a cada tick para precisão
-            if (dateStop) {
-                const now = new Date();
-                const diffSeconds = Math.floor((dateStop - now) / 1000);
-                timeLeft = Math.max(0, diffSeconds);
-            } else {
-                // Fallback: decrementar (menos preciso)
-                if (timeLeft > 0) {
-                    timeLeft--;
-                }
-            }
+            // Calcular tempo decorrido desde o início
+            const elapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+            const timeLeft = Math.max(0, initialTimeLeft - elapsed);
             
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
@@ -388,6 +394,7 @@ patch(FormController.prototype, {
                         
                         // O método Python já retorna uma notificação que é processada automaticamente
                         // Não precisamos mostrar notificação aqui para evitar duplicação
+                        this._skipAbandonReport = true;
                         
                         // Fechar o popup após 2 segundos, apenas se ainda não foi destruído
                         scheduleClose();
@@ -427,6 +434,7 @@ patch(FormController.prototype, {
                     }
                     
                     if (!this._isDestroyed) {
+                        this._skipAbandonReport = true;
                         this._cleanupAndClose(2000);
                     }
                 }
@@ -474,6 +482,7 @@ patch(FormController.prototype, {
                     if (stageId === STAGE_APROVADO) {
                         clearInterval(this.statusCheckInterval);
                         clearInterval(this.timerInterval);
+                        this._skipAbandonReport = true;
                         
                         if (this._isDestroyed) return;
                         
@@ -531,6 +540,7 @@ patch(FormController.prototype, {
                     else if (stageId === STAGE_FALHOU) {
                         clearInterval(this.statusCheckInterval);
                         clearInterval(this.timerInterval);
+                        this._skipAbandonReport = true;
                         
                         if (this._isDestroyed) return;
                         // Atualizar imagem no popup para erro
@@ -587,6 +597,7 @@ patch(FormController.prototype, {
                     else if (stageId === STAGE_CANCELADO) {
                         clearInterval(this.statusCheckInterval);
                         clearInterval(this.timerInterval);
+                        this._skipAbandonReport = true;
                         
                         if (this._isDestroyed) return;
                         

@@ -48,11 +48,12 @@ class CSWTotalPayActions(models.Model):
 
             nova_data = fields.Datetime.now()
             payment.write({'date': nova_data})
+            # Não definir date_start/date_stop aqui - serão definidos com o timestamp da API no callback
             self.with_context(from_api=True).write({
                 'x_studio_stage_id': constants.STAGE_PENDENTE,
                 'x_studio_date_hour_payment': nova_data,
-                'x_studio_date_start': nova_data,
-                'x_studio_date_stop': nova_data + timedelta(minutes=constants.MBWAY_TIMEOUT_MINUTES) if is_mbway else False,
+                'x_studio_date_start': False,
+                'x_studio_date_stop': False,
                 'x_studio_date_hour_payment_approved': False,
                 'x_studio_paypal_capture_id': False,
                 'x_studio_paypal_transaction_id': False,
@@ -181,13 +182,19 @@ class CSWTotalPayActions(models.Model):
         account = config.x_studio_reconcile_account_id
         if not payment.move_id:
             return
+
+        target_moves = payment.invoice_ids | payment.reconciled_invoice_ids | payment.reconciled_bill_ids
+        if not target_moves:
+            _logger.info("[RECONCILIAÇÃO] %s: SEM FATURAS ASSOCIADAS", self.x_name or 'N/A')
+            return
+
         reconciled_any = False
-        for invoice in payment.reconciled_invoice_ids:
+        for invoice in target_moves:
             invoice_line = invoice.line_ids.filtered(
-                lambda l: l.account_id == account and l.debit > 0 and not l.reconciled
+                lambda l: l.account_id == account and not l.reconciled
             )
             payment_line = payment.move_id.line_ids.filtered(
-                lambda l: l.account_id == account and l.credit > 0 and not l.reconciled
+                lambda l: l.account_id == account and not l.reconciled
             )
             if invoice_line and payment_line:
                 (invoice_line | payment_line).reconcile()

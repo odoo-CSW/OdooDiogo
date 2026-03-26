@@ -137,7 +137,30 @@ class MbwayTimerWizard(models.TransientModel):
         """
         Cancela o wizard
         """
+        self.ensure_one()
+        self.action_popup_abandoned()
         return {'type': 'ir.actions.act_window_close'}
+
+    def action_popup_abandoned(self):
+        """Marca o pagamento como cancelado quando o popup é fechado pelo utilizador."""
+        self.ensure_one()
+
+        connector = self.env['x_csw_totalpay'].search([
+            ('account_payment_id', '=', self.payment_id.id)
+        ], limit=1)
+
+        if not connector:
+            return False
+
+        stage_id = connector.x_studio_stage_id.id if connector.x_studio_stage_id else None
+        if stage_id in [constants.STAGE_PENDENTE, constants.STAGE_EM_PROCESSAMENTO]:
+            connector.with_context(from_api=True).write({
+                'x_studio_stage_id': constants.STAGE_CANCELADO,
+                'x_studio_error_message': 'Fluxo MB WAY encerrado: popup/aba fechado pelo utilizador.',
+            })
+            return True
+
+        return False
     
     def action_timeout(self):
         """

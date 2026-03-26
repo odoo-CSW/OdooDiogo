@@ -68,14 +68,15 @@
                         </div>
                     </div>
 
-                    <!-- Validade fixa -->
+                    <!-- Validade dinâmica -->
+                    <field name="expiry_days_used" invisible="1"/>
                     <div style="margin-top:12px; padding:10px;
                                 background:#e3f2fd; border-left:4px solid #2196f3;
                                 border-radius:4px;">
                         <span class="fa fa-info-circle" title="Informação"
                               style="color:#1976d2; margin-right:6px;"/>
                         <strong style="color:#0d47a1; font-size:13px;">
-                            Validade: 30 dias
+                            Validade: <field name="expiry_days_used" nolabel="1" readonly="1"/> dias
                         </strong>
                     </div>
                     

@@ -30,8 +30,10 @@ class CSWTotalPayIntegrator(models.Model):
     def action_check_payment_status_from_integrator(self):
         self._ensure_single('Verificar Status')
         try:
-            if self.x_studio_stage_id.id not in (constants.STAGE_PENDENTE, constants.STAGE_EM_PROCESSAMENTO):
-                return {'status': 'skipped', 'message': 'Pagamento não está Pendente ou Em Processamento'}
+            # Permitir atualização de status para Pendente, Em Processamento, ou Falhou
+            # (Falhou pode ser atualizado para Cancelado se a API retornar esse status)
+            if self.x_studio_stage_id.id not in (constants.STAGE_PENDENTE, constants.STAGE_EM_PROCESSAMENTO, constants.STAGE_FALHOU):
+                return {'status': 'skipped', 'message': 'Pagamento não está em estado atualizável'}
 
             config = self._get_config()
             if not config:
@@ -234,6 +236,9 @@ class CSWTotalPayIntegrator(models.Model):
                         update_vals['x_studio_payment_url'] = payment_url
 
                     if payment_method == constants.PAYMENT_METHOD_MULTIBANCO:
+                        # Sempre guardar número de dias de validade usado (independente da resposta da API)
+                        update_vals['x_studio_mb_expiry_days'] = config.x_studio_multibanco_expiry_days or 30
+                        
                         pd = payment_details or response_data
 
                         if isinstance(pd, dict):
@@ -254,6 +259,7 @@ class CSWTotalPayIntegrator(models.Model):
                         update_vals['x_studio_paypal_transaction_id'] = response_data.get('transaction_id')
                         update_vals['x_studio_paypal_capture_id'] = response_data.get('capture_id')
                     elif payment_method == constants.PAYMENT_METHOD_MBWAY:
+                        # Procurar timestamp da API em múltiplos locais possíveis
                         timestamp_keys = ('startedAt', 'startAt', 'createdAt', 'created_at', 'initiatedAt', 'createdOn', 'timestamp')
                         start_value = None
                         for container in (response_data, d):
@@ -273,19 +279,24 @@ class CSWTotalPayIntegrator(models.Model):
                             if start_value:
                                 break
 
+                        # Tentar converter o timestamp da API
+                        start_dt = None
                         if start_value:
                             try:
                                 if isinstance(start_value, str):
                                     parsed = datetime.fromisoformat(start_value.replace('Z', '+00:00'))
                                     start_dt = parsed.replace(tzinfo=None)
-                                else:
-                                    start_dt = None
                             except Exception:
                                 start_dt = None
 
-                            if start_dt:
-                                update_vals['x_studio_date_start'] = start_dt
-                                update_vals['x_studio_date_stop'] = start_dt + timedelta(minutes=constants.MBWAY_TIMEOUT_MINUTES)
+                        # Se não conseguiu obter timestamp da API, usar o momento atual como fallback
+                        if not start_dt:
+                            start_dt = datetime.now()
+                            _logger.warning("[MBWAY] Timestamp da API não encontrado, usando timestamp local: %s", start_dt)
+
+                        # Sempre definir date_start e date_stop para MBWAY
+                        update_vals['x_studio_date_start'] = start_dt
+                        update_vals['x_studio_date_stop'] = start_dt + timedelta(minutes=constants.MBWAY_TIMEOUT_MINUTES)
 
                     if update_vals:
                         try:

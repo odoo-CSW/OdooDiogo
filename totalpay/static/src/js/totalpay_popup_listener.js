@@ -24,6 +24,7 @@ const totalpayPopupListener = {
         
         // Rastrear popups atualmente abertos para evitar duplicados
         const openPopups = new Set(); // Set de payment IDs
+        let currentPopupPaymentIds = [];
 
         // --- Coordenação entre abas ---
         // Web Locks API: exclusão mútua real entre abas (sem race conditions).
@@ -69,12 +70,17 @@ const totalpayPopupListener = {
         }
 
         // --- Intercetar o fecho de popups ---
-        const originalDoAction = action.doAction;
-        action.doAction = function (actionRequest, options) {
-            if (actionRequest && actionRequest.type === 'ir.actions.act_window_close' && openPopups.size > 0) {
-                window.location.reload();
+        const originalDoAction = action.doAction.bind(action);
+        action.doAction = async function (actionRequest, options) {
+            const isCloseAction = actionRequest && actionRequest.type === 'ir.actions.act_window_close';
+            const result = await originalDoAction(actionRequest, options);
+
+            if (isCloseAction && currentPopupPaymentIds.length) {
+                currentPopupPaymentIds.forEach((pid) => openPopups.delete(pid));
+                currentPopupPaymentIds = [];
             }
-            return originalDoAction.apply(this, arguments);
+
+            return result;
         };
 
         // Subscrever diretamente ao tipo de notificação 'totalpay_popup'
@@ -140,9 +146,13 @@ const totalpayPopupListener = {
                     {}
                 );
                 if (actionData) {
+                    currentPopupPaymentIds = [...paymentIds];
                     await action.doAction(actionData);
                     setTimeout(() => {
                         paymentIds.forEach(pid => openPopups.delete(pid));
+                        if (currentPopupPaymentIds.length) {
+                            currentPopupPaymentIds = currentPopupPaymentIds.filter(pid => !paymentIds.includes(pid));
+                        }
                     }, 300000);
                 }
             } catch (error) {

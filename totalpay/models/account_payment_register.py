@@ -101,7 +101,7 @@ class AccountPaymentRegister(models.TransientModel):
         
         # 3. FAZER PEDIDO À API
         try:
-            connector.action_create_payment_request()
+            api_result = connector.action_create_payment_request()
             connector.invalidate_recordset()
             connector = self.env['x_csw_totalpay'].browse(connector.id)
         except Exception as e:
@@ -110,9 +110,19 @@ class AccountPaymentRegister(models.TransientModel):
         
         # 4. POPUP VIA BUS (frontend decide qual popup abrir)
         if connector.x_studio_stage_id.id == constants.STAGE_FALHOU:
-            if connector.x_studio_error_message:
-                _logger.error("[TOTALPAY] Falha %s: %s", method_code, connector.x_studio_error_message)
-            error_msg = _('Não foi possível concluir o pagamento MB WAY. Por favor, tente novamente.')
+            backend_error = connector.x_studio_error_message or ''
+            notify_message = ''
+            if isinstance(api_result, dict):
+                notify_message = (api_result.get('params', {}) or {}).get('message', '')
+
+            if backend_error:
+                _logger.error("[TOTALPAY] Falha %s: %s", method_code, backend_error)
+
+            method_label = 'MB WAY' if method_code == constants.PAYMENT_METHOD_MBWAY else 'MULTIBANCO'
+            error_msg = backend_error or notify_message or _(
+                'Não foi possível concluir o pagamento %s. Por favor, tente novamente.'
+            ) % method_label
+
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',

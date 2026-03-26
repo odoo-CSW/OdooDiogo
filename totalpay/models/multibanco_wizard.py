@@ -23,6 +23,7 @@ class MultibancoWizard(models.TransientModel):
     partner_email = fields.Char(string='Email Destinatário', help='Email para enviar as instruções de pagamento')
     days_remaining = fields.Integer(string='Dias Restantes', compute='_compute_days_remaining')
     expiry_message = fields.Char(string='Mensagem de Validade', compute='_compute_days_remaining')
+    expiry_days_used = fields.Integer(string='Dias de Validade', readonly=True, help='Número de dias de validade usado ao gerar esta referência')
     
     @api.depends('expiry_date')
     def _compute_days_remaining(self):
@@ -49,7 +50,7 @@ class MultibancoWizard(models.TransientModel):
     
     @api.model
     def default_get(self, fields_list):
-        """Preencher email do parceiro por padrão"""
+        """Preencher email do parceiro e dias de validade por padrão"""
         res = super(MultibancoWizard, self).default_get(fields_list)
         
         # Buscar partner_id do context ou do payment_id
@@ -65,6 +66,16 @@ class MultibancoWizard(models.TransientModel):
             partner = self.env['res.partner'].browse(partner_id)
             if partner.email and 'partner_email' in fields_list:
                 res['partner_email'] = partner.email
+        
+        # Preencher dias de validade do connector (valor fixo gravado na BD)
+        if 'expiry_days_used' in fields_list and res.get('connector_id'):
+            connector = self.env['x_csw_totalpay'].browse(res['connector_id'])
+            if connector.x_studio_mb_expiry_days:
+                res['expiry_days_used'] = connector.x_studio_mb_expiry_days
+            else:
+                # Fallback: usar valor da configuração atual
+                config = self.env['x_csw_totalpay_config'].sudo().search([], limit=1)
+                res['expiry_days_used'] = config.x_studio_multibanco_expiry_days if config else 30
         
         return res
     
